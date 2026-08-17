@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Us - Chic Charm Beads</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right,rgb(215, 243, 239),rgb(233, 220, 247));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .contact-container {
+      width: 90%;
+      max-width: 500px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+      padding: 30px 40px;
+      text-align: center;
+    }
+
+    .contact-container h2 {
+      margin-bottom: 20px;
+      color: #7f5af0;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin: 12px 0 6px;
+      color: #444;
+      font-weight: 500;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+      font-size: 14px;
+      margin-bottom: 15px;
+      transition: border 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #7f5af0;
+      outline: none;
+      background-color: #f2efff;
+    }
+
+    button {
+      background-color: #7f5af0;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #9c7dfc;
+    }
+
+    .info {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    a {
+      color: #7f5af0;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .contact-container {
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="contact-container">
+    <h2>Contact Chic Charm Beads</h2>
+    <form action="contact_process.php" method="POST">
+      <label for="name">Your Name</label>
+      <input type="text" name="name" id="name" required>
+
+      <label for="email">Your Email</label>
+      <input type="email" name="email" id="email" required>
+
+      <label for="message">Your Message</label>
+      <textarea name="message" id="message" rows="5" required></textarea>
+
+      <button type="submit">Send Message</button>
+    </form>
+
+    <div class="info">
+      📩 Email: chiccharmbeads@gmail.com<br>
+      📱 WhatsApp: <a href="https://wa.me/91XXXXXXXXXX">Click to chat</a>
+    </div>
+  </div>
+
+</body>
+</html>
