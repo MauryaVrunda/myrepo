@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
 if (!isset($_GET['id'])) {
   echo "❌ Product not specified.";
@@ -11,17 +10,12 @@ $estimated_date = date('l, d M Y', strtotime('+5 days')); // 5-day delivery
 $product_id = intval($_GET['id']);
 
 // Fetch main product details
-$product_query = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$product_query->bind_param("i", $product_id);
-$product_query->execute();
-$product_result = $product_query->get_result();
+$product = find_product($conn, $product_id);
 
-if ($product_result->num_rows === 0) {
+if (!$product) {
   echo "❌ Product not found!";
   exit;
 }
-
-$product = $product_result->fetch_assoc();
 
 // Fetch additional images from product_images table
 $image_query = $conn->prepare("SELECT image_path FROM product_images WHERE product_id = ?");
@@ -204,7 +198,7 @@ while ($row = $image_result->fetch_assoc()) {
       <button type="submit">🤍 Wishlist</button><br><br>
     </form>
 
-    <?php if (isset($_SESSION['user_id'])): ?>
+    <?php if (is_logged_in()): ?>
   <form action="place_order.php" method="POST">
     <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
     <button type="submit">Place Order</button>

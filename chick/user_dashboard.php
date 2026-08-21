@@ -1,20 +1,13 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// Protect user dashboard
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+$user_id = require_login();
 
 // Prevent admin from accessing user dashboard
-if ($_SESSION['user_email'] === 'admin@gmail.com') {
-    header("Location: admin_dashboard.php");
-    exit();
+if (is_admin()) {
+    redirect_to('admin_dashboard.php');
 }
 
-$user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
 
 // Fetch user info including profile image
@@ -51,6 +44,7 @@ $cart_items = $cart_result->fetch_all(MYSQLI_ASSOC);
   <meta charset="UTF-8">
   <title>User Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles/layout.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -165,20 +159,6 @@ $cart_items = $cart_result->fetch_all(MYSQLI_ASSOC);
 .cancel-btn:hover {
   background-color: #e60000;
 }
-.footer {
-  background: #222;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: underline;
-  margin: 0 5px;
-}
-
   </style>
 </head>
 <body>
@@ -242,18 +222,7 @@ $cart_items = $cart_result->fetch_all(MYSQLI_ASSOC);
 
 </div>
 <!-- Footer -->
-<br><br><br><footer class="footer">
-  <div class="contact">
-    <p>📞 +91 9328594884 | ✉️ vrundamaurya07@gmail.com</p>
-    <a href="about.php">About Us</a><br>
-    <a href="contact.html">Contact Us</a>
-  </div>
-  <div class="social">
-    <a href="#">Instagram</a> |
-    <a href="#">Facebook</a> |
-    <a href="#">Pinterest</a> 
-  </div>
-  <p>&copy; <?= date("Y") ?> Chic Charm Beads. All rights reserved.</p>
-</footer>
+<br><br><br>
+<?php include 'includes/partials/footer.php'; ?>
 </body>
 </html>

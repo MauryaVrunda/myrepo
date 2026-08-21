@@ -1,13 +1,6 @@
 <?php
-include 'connect.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-// Load PHPMailer
-require 'src/Exception.php';
-require 'src/PHPMailer.php';
-require 'src/SMTP.php';
+require 'includes/bootstrap.php';
+require 'includes/mailer.php';
 
 // Sanitize form inputs
 $name = mysqli_real_escape_string($conn, $_POST['name']);
@@ -18,37 +11,11 @@ $message = mysqli_real_escape_string($conn, $_POST['message']);
 $sql = "INSERT INTO contact_messages (name, email, message) 
         VALUES ('$name', '$email', '$message')";
 
-// Default email status
-$email_sent = false;
-
-// Email sending with PHPMailer
-$mail = new PHPMailer(true);
-try {
-    // Server settings
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-
-    // 🟣 Replace with your Gmail and App Password here
-    $mail->Username = 'vrundamaurya07@gmail.com';         // Your Gmail
-    $mail->Password =  'msft qfxp bfjj hgbu';      // App password from Google
-
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
-
-    // Email content
-    $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-    $mail->addAddress('vrundamaurya07@gmail.com'); // Send to self
-
-    $mail->isHTML(false);
-    $mail->Subject = "New Contact Message from $name";
-    $mail->Body    = "You received a message:\n\nName: $name\nEmail: $email\nMessage:\n$message";
-
-    $mail->send();
-    $email_sent = true;
-} catch (Exception $e) {
-    $email_sent = false;
-}
+$email_sent = send_site_mail(
+    "New Contact Message from $name",
+    "You received a message:\n\nName: $name\nEmail: $email\nMessage:\n$message",
+    false
+);
 ?>
 
 <!DOCTYPE html>

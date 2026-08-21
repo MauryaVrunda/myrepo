@@ -1,5 +1,5 @@
 <?php
-require 'connect.php';
+require 'includes/bootstrap.php';
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

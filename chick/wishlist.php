@@ -1,14 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// Redirect if user is not logged in
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 
 // Fetch wishlist products
 $sql = "SELECT p.id, p.name, p.price, p.image 
@@ -26,6 +19,7 @@ $result = $stmt->get_result();
   <meta charset="UTF-8" />
   <title>My Wishlist - Chic Charm Beads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles/layout.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -36,39 +30,6 @@ $result = $stmt->get_result();
     .container {
       max-width: 1000px;
       margin: auto;
-    }
-
-    .navbar {
-      background-color: #222;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap:wrap;
-    }
-
-    .navbar .logo {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .navbar ul {
-      list-style: none;
-      display: flex;
-      gap: 20px;
-      flex-wrap:wrap;
-    }
-
-    .navbar li a {
-      color: white;
-      text-decoration: none;
-      padding: 6px 10px;
-    }
-
-    .navbar li a:hover {
-      background-color: #555;
-      border-radius: 4px;
     }
 
     h2 {
@@ -149,34 +110,11 @@ $result = $stmt->get_result();
       margin-top: 50px;
       color: #777;
     }
-    .footer {
-  background: #222;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: underline;
-  margin: 0 5px;
-}
   </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<div class="navbar">
-  <div class="logo">Chic Charm Beads</div>
-  <ul>
-    <li><a href="index.php">Home</a></li>
-    <li><a href="shop.php">Shop</a></li>
-    <li><a href="wishlist.php">Wishlist</a></li>
-    <li><a href="cart.php">Cart</a></li>
-    <li><a href="user_dashboard.php">Account</a></li>
-  </ul>
-</div>
+<?php $active = 'wishlist.php'; include 'includes/partials/navbar.php'; ?>
 
 <!-- Wishlist Section -->
 <div class="container">
@@ -207,19 +145,8 @@ $result = $stmt->get_result();
 <?php endif; ?>
 </div>
 <!-- Footer -->
-<br><br><br><footer class="footer">
-  <div class="contact">
-    <p>📞 +91 9328594884 | ✉️ vrundamaurya07@gmail.com</p>
-    <a href="about.php">About Us</a><br>
-    <a href="contact.html">Contact Us</a>
-  </div>
-  <div class="social">
-    <a href="#">Instagram</a> |
-    <a href="#">Facebook</a> |
-    <a href="#">Pinterest</a> 
-  </div>
-  <p>&copy; <?= date("Y") ?> Chic Charm Beads. All rights reserved.</p>
-</footer>
+<br><br><br>
+<?php include 'includes/partials/footer.php'; ?>
 
 </body>
 </html>

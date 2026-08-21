@@ -1,13 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 $success = '';
 $error = '';
 

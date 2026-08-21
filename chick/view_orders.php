@@ -1,12 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// ✅ Allow only admin access
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 $search = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';

@@ -1,14 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/bootstrap.php';
 
-if (!isset($_SESSION['order_success'])) {
-  header("Location: index.php");
-  exit();
+$order = take_flash('order_success');
+if ($order === null) {
+  redirect_to('index.php');
 }
 
-$product = $_SESSION['order_success']['product'];
-$delivery = $_SESSION['order_success']['delivery_date'];
-unset($_SESSION['order_success']);
+$product = $order['product'];
+$delivery = $order['delivery_date'];
 ?>
 
 <!DOCTYPE html>

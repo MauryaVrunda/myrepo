@@ -1,13 +1,6 @@
 <?php
-session_start();
-require 'connect.php';
-
-// Include PHPMailer at the top
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-require 'src/PHPMailer.php';
-require 'src/SMTP.php';
-require 'src/Exception.php';
+require 'includes/bootstrap.php';
+require 'includes/mailer.php';
 
 // Show loading animation first (this runs before logic)
 echo "<!DOCTYPE html>
@@ -50,13 +43,13 @@ echo "<!DOCTYPE html>
 </body>
 </html>";
 
-if (!isset($_SESSION['user_id']) || !isset($_POST['order_id'])) {
-  $_SESSION['cancel_result'] = ['status' => 'fail', 'msg' => 'Invalid request.'];
+if (!is_logged_in() || !isset($_POST['order_id'])) {
+  set_flash('cancel_result', ['status' => 'fail', 'msg' => 'Invalid request.']);
   exit();
 }
 
 $order_id = intval($_POST['order_id']);
-$user_id = $_SESSION['user_id'];
+$user_id = current_user_id();
 
 // Validate the order
 $check = $conn->prepare("SELECT o.*, p.name AS product_name FROM orders o
@@ -75,37 +68,18 @@ if ($result->num_rows === 1) {
   $update->execute();
 
   // Email notification to admin
-  try {
-    $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = 'vrundamaurya07@gmail.com'; // your email
-    $mail->Password = 'msft qfxp bfjj hgbu';    // your app password
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
-
-    $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-    $mail->addAddress('vrundamaurya07@gmail.com'); // admin email
-
-    $mail->isHTML(true);
-    $mail->Subject = '⚠️ Order Cancelled - Chic Charm Beads';
-    $mail->Body = "
+  send_site_mail('⚠️ Order Cancelled - Chic Charm Beads', "
       <h2>Order Cancelled</h2>
       <p><strong>Order ID:</strong> {$order_id}</p>
       <p><strong>Product:</strong> {$order['product_name']}</p>
       <p><strong>Quantity:</strong> {$order['quantity']}</p>
       <p><strong>Total:</strong> ₹{$order['total_price']}</p>
       <p><strong>User ID:</strong> {$order['user_id']}</p>
-    ";
-    $mail->send();
-  } catch (Exception $e) {
-    // Log email error if needed
-  }
+    ");
 
-  $_SESSION['cancel_result'] = ['status' => 'success', 'msg' => 'Order cancelled successfully!'];
+  set_flash('cancel_result', ['status' => 'success', 'msg' => 'Order cancelled successfully!']);
 } else {
-  $_SESSION['cancel_result'] = ['status' => 'fail', 'msg' => 'Order not found or cannot be cancelled.'];
+  set_flash('cancel_result', ['status' => 'fail', 'msg' => 'Order not found or cannot be cancelled.']);
 }
 
 exit();

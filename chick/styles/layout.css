@@ -1,0 +1,49 @@
+/* Navbar and footer styling shared by the storefront pages. */
+
+.navbar {
+  background-color: #222;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.navbar .logo {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.navbar ul,
+.navbar .nav-links {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.navbar li a {
+  color: white;
+  text-decoration: none;
+  padding: 6px 10px;
+}
+
+.navbar li a:hover {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.footer {
+  background: #222;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: underline;
+  margin: 0 5px;
+}

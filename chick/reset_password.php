@@ -1,6 +1,5 @@
 <?php
-// Database connection
-$conn = mysqli_connect('localhost', 'root', '', 'portfgenie', 3307);
+require 'includes/bootstrap.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $token = $_POST['token'];              // Reset token provided by the user

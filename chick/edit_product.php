@@ -1,12 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// Only allow admin
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 // Ensure product ID is present
 if (!isset($_GET['id'])) {
@@ -17,11 +12,7 @@ if (!isset($_GET['id'])) {
 $product_id = intval($_GET['id']);
 $message = "";
 
-// Fetch product info
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->bind_param("i", $product_id);
-$stmt->execute();
-$product = $stmt->get_result()->fetch_assoc();
+$product = find_product($conn, $product_id);
 
 if (!$product) {
     echo "❌ Product not found.";
@@ -38,9 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // If new image is uploaded
     if ($newImage['size'] > 0) {
-        $imageName = time() . "_" . basename($newImage['name']);
-        $target = "images/" . $imageName;
-        move_uploaded_file($newImage['tmp_name'], $target);
+        $imageName = store_product_image($newImage) ?? $product['image'];
     }
 
     // Update product

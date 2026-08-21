@@ -1,15 +1,14 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// ✅ Ensure only admin can access
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 // ✅ Fetch all users except the admin
-$result = $conn->query("SELECT * FROM users WHERE email != 'admin@gmail.com' ORDER BY id DESC");
+$admin_email = ADMIN_EMAIL;
+$stmt = $conn->prepare("SELECT * FROM users WHERE email != ? ORDER BY id DESC");
+$stmt->bind_param("s", $admin_email);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>

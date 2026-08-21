@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>About Us | Chic Charm Beads</title>
+  <link rel="stylesheet" href="styles/layout.css">
   <style>
     body {
       margin: 0;
@@ -93,19 +94,6 @@ background: linear-gradient(to right,rgb(220, 248, 244),rgb(233, 221, 247));
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .footer {
-  background: #222;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: underline;
-  margin: 0 5px;
-}
   </style>
 </head>
 <body>
@@ -148,19 +136,7 @@ background: linear-gradient(to right,rgb(220, 248, 244),rgb(233, 221, 247));
   </div>
 </div>
 <!-- Footer -->
-<footer class="footer">
-  <div class="contact">
-    <p>📞 +91 9328594884 | ✉️ vrundamaurya07@gmail.com</p>
-    <a href="about.php">About Us</a><br>
-    <a href="contact.html">Contact Us</a>
-  </div>
-  <div class="social">
-    <a href="#">Instagram</a> |
-    <a href="#">Facebook</a> |
-    <a href="#">Pinterest</a> 
-  </div>
-  <p>&copy; <?= date("Y") ?> Chic Charm Beads. All rights reserved.</p>
-</footer>
+<?php include 'includes/partials/footer.php'; ?>
 
 </body>
 </html>

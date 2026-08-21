@@ -1,5 +1,5 @@
 <?php
-require 'connect.php';
+require 'includes/bootstrap.php';
 
 $query = "SELECT * FROM products";
 $conditions = [];
@@ -62,32 +62,11 @@ $result = $stmt->get_result();
   <title>Chic Charm Beads - Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles/shop.css">
+  <link rel="stylesheet" href="styles/layout.css">
   <style>
     body{
       background: linear-gradient(to right,rgb(197, 247, 240),rgb(228, 207, 250));
     }
-  .navbar {
-    background-color: #222;
-    padding: 15px 20px;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap:wrap;
-  }
-
-  .navbar .logo {
-    font-weight: bold;
-    font-size: 20px;
-  }
-
-  .navbar .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-    flex-wrap:wrap;
-  }
-
   #filterForm select, #filterForm button {
     padding: 8px 12px;
     border: 1px solid #ccc;
@@ -127,40 +106,18 @@ $result = $stmt->get_result();
     opacity: 0;
   }
 
-  .footer {
-    background: #222;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    font-size: 14px;
-  }
-
-  .footer a {
-    color: #fff;
-    text-decoration: underline;
-    margin: 0 5px;
-  }
   </style>
 </head>
 <body>
 
 <!-- Navigation -->
-<nav class="navbar">
-  <div class="logo">Chic Charm Beads</div>
-  <ul class="nav-links">
-    <li><a href="index.php">Home</a></li>
-    <li><a href="shop.php" class="active">Shop</a></li>
-    <li><a href="wishlist.php">Wishlist</a></li>
-    <li><a href="cart.php">Cart</a></li>
-    <li><a href="login.php">Account</a></li>
-  </ul>
-  <div class="search">
-    <!-- Search Bar -->
-<form method="GET" action="shop.php" style="display: flex;">
-  <input type="text" name="search" placeholder="Search products..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;" />
-</form>
-  </div>
-</nav>
+<?php
+$active = 'shop.php';
+$navbar_extra = '<form method="GET" action="shop.php" style="display: flex;">
+  <input type="text" name="search" placeholder="Search products..." value="' . htmlspecialchars($_GET['search'] ?? '') . '" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;" />
+</form>';
+include 'includes/partials/navbar.php';
+?>
 
 <!-- Filter Bar -->
 <form method="GET" id="filterForm" style="margin: 20px 10px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
@@ -238,18 +195,6 @@ $result = $stmt->get_result();
 </main>
 
 <!-- Footer -->
-<footer class="footer">
-  <div class="contact">
-    <p>📞 +91 9328594884 | ✉️ vrundamaurya07@gmail.com</p>
-    <a href="about.php">About Us</a><br>
-    <a href="contact.html">Contact Us</a>
-  </div>
-  <div class="social">
-    <a href="#">Instagram</a> |
-    <a href="#">Facebook</a> |
-    <a href="#">Pinterest</a> 
-  </div>
-  <p>&copy; <?= date("Y") ?> Chic Charm Beads. All rights reserved.</p>
-</footer>
+<?php include 'includes/partials/footer.php'; ?>
 </body>
 </html>

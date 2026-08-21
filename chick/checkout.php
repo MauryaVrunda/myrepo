@@ -1,14 +1,8 @@
 
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 
 $success = '';
 $error = '';
@@ -63,13 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $del->execute();
 
             // ✅ Redirect
-            $_SESSION['order_success'] = [
+            set_flash('order_success', [
                 'total_price' => $total_price,
                 'delivery_date' => $delivery_date,
                 'payment_method' => $payment_method
-            ];
-            header("Location: thankyou.php");
-            exit();
+            ]);
+            redirect_to('thankyou.php');
         } else {
             $error = "🛒 Your cart is empty.";
         }

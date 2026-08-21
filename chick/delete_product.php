@@ -1,12 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// ✅ Ensure only admin can access
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 // ✅ Ensure a product ID is passed
 if (!isset($_GET['id'])) {
@@ -16,27 +11,17 @@ if (!isset($_GET['id'])) {
 
 $product_id = intval($_GET['id']);
 
-// ✅ Get the image filename to delete later
-$stmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
-$stmt->bind_param("i", $product_id);
-$stmt->execute();
-$stmt->bind_result($imageName);
-$stmt->fetch();
-$stmt->close();
+$product = find_product($conn, $product_id);
+$imageName = $product['image'] ?? '';
 
 // ✅ Delete product from database
 $delete = $conn->prepare("DELETE FROM products WHERE id = ?");
 $delete->bind_param("i", $product_id);
 
 if ($delete->execute()) {
-    // ✅ Delete image file (optional)
-    $imagePath = "images/" . $imageName;
-    if (file_exists($imagePath)) {
-        unlink($imagePath); // remove file
-    }
+    delete_product_image($imageName);
 
-    header("Location: manage_products.php?msg=deleted");
-    exit();
+    redirect_to('manage_products.php?msg=deleted');
 } else {
     echo "❌ Failed to delete product.";
 }

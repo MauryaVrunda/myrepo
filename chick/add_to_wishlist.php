@@ -1,13 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $product_id = intval($_POST['product_id']);
@@ -24,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $insert->execute();
   }
 
-  header("Location: added_to_wishlist.php");
-  exit();
+  redirect_to('added_to_wishlist.php');
 }
 ?>

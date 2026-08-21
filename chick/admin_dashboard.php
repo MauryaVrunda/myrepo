@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
 ?>
 

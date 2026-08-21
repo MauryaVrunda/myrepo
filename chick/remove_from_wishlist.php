@@ -1,13 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 $product_id = intval($_GET['id'] ?? 0);
 
 if ($product_id > 0) {
@@ -16,5 +10,4 @@ if ($product_id > 0) {
   $stmt->execute();
 }
 
-header("Location: wishlist.php");
-exit();
+redirect_to('wishlist.php');

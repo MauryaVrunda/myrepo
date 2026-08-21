@@ -1,6 +1,5 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
 // Optional: Add authentication to ensure only admin accesses this page
 // if ($_SESSION['user_role'] !== 'admin') {

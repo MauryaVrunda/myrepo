@@ -1,11 +1,9 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (isset($_SESSION['user_id'])) {
+if (is_logged_in()) {
   // Redirect if already logged in
-  header("Location: user_dashboard.php");
-  exit();
+  redirect_to('user_dashboard.php');
 }
 
 $error = '';
@@ -26,12 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['user_email'] = $user['email'];  
 
       // ✅ Admin check based on email
-      if ($email === 'admin@gmail.com') {
-        header("Location: admin_dashboard.php");
-      } else {
-        header("Location: user_dashboard.php");
-      }
-      exit();
+      redirect_to(is_admin() ? 'admin_dashboard.php' : 'user_dashboard.php');
     } else {
       $error = "❌ Invalid password!";
     }
