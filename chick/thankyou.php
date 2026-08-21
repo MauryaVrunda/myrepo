@@ -6,8 +6,9 @@ if (!isset($_SESSION['order_success'])) {
   exit();
 }
 
-$product = $_SESSION['order_success']['product'];
-$delivery = $_SESSION['order_success']['delivery_date'];
+// A cart checkout has no single product name, only a total.
+$product = $_SESSION['order_success']['product'] ?? 'your items';
+$delivery = $_SESSION['order_success']['delivery_date'] ?? date('Y-m-d', strtotime('+5 days'));
 unset($_SESSION['order_success']);
 ?>
 

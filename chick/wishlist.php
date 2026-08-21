@@ -10,6 +10,9 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+$error = $_SESSION['wishlist_error'] ?? '';
+unset($_SESSION['wishlist_error']);
+
 // Fetch wishlist products
 $sql = "SELECT p.id, p.name, p.price, p.image 
         FROM wishlist w
@@ -181,6 +184,10 @@ $result = $stmt->get_result();
 <!-- Wishlist Section -->
 <div class="container">
 <h2>Your Wishlist</h2>
+
+<?php if ($error): ?>
+  <p style="color:red; font-weight:bold;"><?= htmlspecialchars($error) ?></p>
+<?php endif; ?>
 
 <?php if ($result->num_rows > 0): ?>
   <div class="wishlist-container">

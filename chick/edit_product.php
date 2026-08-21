@@ -36,24 +36,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $imageName = $product['image']; // default
 
+    $uploadFailed = false;
+
     // If new image is uploaded
-    if ($newImage['size'] > 0) {
+    if ($newImage['error'] !== UPLOAD_ERR_OK && $newImage['error'] !== UPLOAD_ERR_NO_FILE) {
+        error_log("Product image upload failed with error code {$newImage['error']}");
+        $message = "❌ Image upload failed. Please try again.";
+        $uploadFailed = true;
+    } elseif ($newImage['size'] > 0) {
         $imageName = time() . "_" . basename($newImage['name']);
         $target = "images/" . $imageName;
-        move_uploaded_file($newImage['tmp_name'], $target);
+        if (!move_uploaded_file($newImage['tmp_name'], $target)) {
+            error_log("Could not move uploaded image to $target");
+            $message = "❌ Could not save the uploaded image.";
+            $uploadFailed = true;
+        }
     }
 
-    // Update product
-    $update = $conn->prepare("UPDATE products SET name = ?, price = ?, image = ? WHERE id = ?");
-    $update->bind_param("sdsi", $name, $price, $imageName, $product_id);
+    if (!$uploadFailed) {
+        try {
+            // Update product
+            $update = $conn->prepare("UPDATE products SET name = ?, price = ?, image = ? WHERE id = ?");
+            $update->bind_param("sdsi", $name, $price, $imageName, $product_id);
+            $update->execute();
 
-    if ($update->execute()) {
-        $message = "✅ Product updated successfully!";
-        // Refresh product data
-        $stmt->execute();
-        $product = $stmt->get_result()->fetch_assoc();
-    } else {
-        $message = "❌ Error updating product.";
+            $message = "✅ Product updated successfully!";
+            // Refresh product data
+            $stmt->execute();
+            $product = $stmt->get_result()->fetch_assoc();
+        } catch (mysqli_sql_exception $e) {
+            error_log("Product update failed for product $product_id: " . $e->getMessage());
+            $message = "❌ Error updating product.";
+        }
     }
 }
 ?>

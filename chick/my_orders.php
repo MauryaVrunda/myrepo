@@ -1,10 +1,13 @@
 <?php
-if (isset($_SESSION['cancel_success'])) {
-  echo "<p style='color: green; font-weight: bold;'>" . $_SESSION['cancel_success'] . "</p>";
-  unset($_SESSION['cancel_success']);
+if (session_status() !== PHP_SESSION_ACTIVE) {
+  session_start();
 }
-if (isset($_SESSION['cancel_error'])) {
-  echo "<p style='color: red; font-weight: bold;'>" . $_SESSION['cancel_error'] . "</p>";
-  unset($_SESSION['cancel_error']);
+
+$cancel_result = $_SESSION['cancel_result'] ?? null;
+unset($_SESSION['cancel_result']);
+
+if ($cancel_result) {
+  $color = $cancel_result['status'] === 'success' ? 'green' : 'red';
+  echo "<p style='color: $color; font-weight: bold;'>" . htmlspecialchars($cancel_result['msg']) . "</p>";
 }
 ?>

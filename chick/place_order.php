@@ -51,7 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)");
     $insert->bind_param("iiidsssss", $user_id, $product_id, $quantity, $total_price, $address, $phone, $payment_method, $delivery_date, $status);
 
-    if ($insert->execute()) {
+    try {
+      $insert->execute();
+
       // 📨 Send emai)
 
       $mail = new PHPMailer(true);
@@ -82,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $mail->send();
       } catch (Exception $e) {
-        // Optional: log error
+        // The order is already saved, so only the notification is lost.
+        error_log("Order confirmation email failed for user $user_id: " . $mail->ErrorInfo);
       }
 
       $_SESSION['order_success'] = [
@@ -93,8 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       header("Location: thankyou.php");
       exit();
-    } else {
-      $error_message = "❌ Error placing order.";
+    } catch (mysqli_sql_exception $e) {
+      error_log("Order insert failed for user $user_id, product $product_id: " . $e->getMessage());
+      $error_message = "❌ Error placing order. Please try again.";
     }
   } else {
     $error_message = "❗ All fields are required.";

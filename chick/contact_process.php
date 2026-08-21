@@ -9,14 +9,20 @@ require 'src/Exception.php';
 require 'src/PHPMailer.php';
 require 'src/SMTP.php';
 
-// Sanitize form inputs
-$name = mysqli_real_escape_string($conn, $_POST['name']);
-$email = mysqli_real_escape_string($conn, $_POST['email']);
-$message = mysqli_real_escape_string($conn, $_POST['message']);
+$name = trim($_POST['name'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$message = trim($_POST['message'] ?? '');
 
 // Save message to database
-$sql = "INSERT INTO contact_messages (name, email, message) 
-        VALUES ('$name', '$email', '$message')";
+$message_saved = false;
+try {
+    $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $email, $message);
+    $stmt->execute();
+    $message_saved = true;
+} catch (mysqli_sql_exception $e) {
+    error_log("Contact message insert failed for $email: " . $e->getMessage());
+}
 
 // Default email status
 $email_sent = false;
@@ -47,6 +53,7 @@ try {
     $mail->send();
     $email_sent = true;
 } catch (Exception $e) {
+    error_log("Contact email failed for $email: " . $mail->ErrorInfo);
     $email_sent = false;
 }
 ?>
@@ -101,16 +108,15 @@ try {
 <body>
   <div class="status-container">
     <?php
-    if ($conn->query($sql) === TRUE && $email_sent) {
-        echo "<h2>🎉 Thank you, $name!</h2>";
+    if ($message_saved && $email_sent) {
+        echo "<h2>🎉 Thank you, " . htmlspecialchars($name) . "!</h2>";
         echo "<p>Your message has been saved and emailed to us. We'll contact you soon 💌</p>";
-    } elseif ($conn->query($sql) === TRUE && !$email_sent) {
+    } elseif ($message_saved) {
         echo "<h2>✔️ Message Saved!</h2>";
         echo "<p>We saved your message, but email sending failed.</p>";
     } else {
         echo "<h2>❌ Error</h2>";
-        echo "<p>Something went wrong while saving your message.</p>";
-        echo "<p>" . $conn->error . "</p>";
+        echo "<p>Something went wrong while saving your message. Please try again later.</p>";
     }
     $conn->close();
     ?>

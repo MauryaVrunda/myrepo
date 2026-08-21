@@ -11,12 +11,20 @@ require 'phpmailer/src/PHPMailer.php';
 require 'phpmailer/src/SMTP.php';
 
 // Connect to database (optional)
-$conn = mysqli_connect('localhost', 'root', '', 'portfgenie', 3307);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+try {
+    $conn = mysqli_connect('localhost', 'root', '', 'portfgenie', 3307);
+} catch (mysqli_sql_exception $e) {
+    error_log("Database connection failed: " . $e->getMessage());
+    http_response_code(503);
+    exit("Service temporarily unavailable. Please try again later.");
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name    = trim($_POST['name']);
-    $email   = trim($_POST['email']);
-    $message = trim($_POST['message']);
+    $name    = trim($_POST['name'] ?? '');
+    $email   = trim($_POST['email'] ?? '');
+    $message = trim($_POST['message'] ?? '');
 
     if (!empty($name) && !empty($email) && !empty($message)) {
         $mail = new PHPMailer(true);
@@ -45,7 +53,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->send();
             echo "<p style='color:green;'>Message sent successfully!</p>";
         } catch (Exception $e) {
-            echo "<p style='color:red;'>Mailer Error: {$mail->ErrorInfo}</p>";
+            error_log("Password reset email failed for $email: " . $mail->ErrorInfo);
+            echo "<p style='color:red;'>Message could not be sent. Please try again later.</p>";
         }
     } else {
         echo "<p style='color:red;'>Please fill in all fields.</p>";

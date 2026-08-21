@@ -20,15 +20,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imageName = time() . "_" . basename($image['name']);
         $targetPath = "images/" . $imageName;
 
-        if (move_uploaded_file($image['tmp_name'], $targetPath)) {
-            $stmt = $conn->prepare("INSERT INTO products (name, price, image) VALUES (?, ?, ?)");
-            $stmt->bind_param("sds", $name, $price, $imageName);
-            if ($stmt->execute()) {
+        if ($image['error'] !== UPLOAD_ERR_OK) {
+            error_log("Product image upload failed with error code {$image['error']}");
+            $message = "❌ Failed to upload image.";
+        } elseif (move_uploaded_file($image['tmp_name'], $targetPath)) {
+            try {
+                $stmt = $conn->prepare("INSERT INTO products (name, price, image) VALUES (?, ?, ?)");
+                $stmt->bind_param("sds", $name, $price, $imageName);
+                $stmt->execute();
                 $message = "✅ Product added successfully!";
-            } else {
+            } catch (mysqli_sql_exception $e) {
+                error_log("Product insert failed for '$name': " . $e->getMessage());
+                // Don't leave an orphaned upload behind.
+                if (!unlink($targetPath)) {
+                    error_log("Could not remove orphaned upload $targetPath");
+                }
                 $message = "❌ Database error.";
             }
         } else {
+            error_log("Could not move uploaded image to $targetPath");
             $message = "❌ Failed to upload image.";
         }
     } else {
