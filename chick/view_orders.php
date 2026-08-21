@@ -1,12 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-// ✅ Allow only admin access
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 $search = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
@@ -20,12 +16,16 @@ $query = "SELECT orders.*,   users.name AS user_name,
           JOIN products ON orders.product_id = products.id
           ";
 
+$conditions = [];
 if ($search) {
     $searchTerm = "%$search%";
-    $query .= " AND (users.email LIKE ? OR products.name LIKE ?)";
+    $conditions[] = "(users.email LIKE ? OR products.name LIKE ?)";
 }
 if ($status_filter) {
-    $query .= " AND orders.status = ?";
+    $conditions[] = "orders.status = ?";
+}
+if ($conditions) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
 }
 
 $query .= " ORDER BY orders.order_date DESC";

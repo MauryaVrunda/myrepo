@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
   use PHPMailer\PHPMailer\PHPMailer;
       use PHPMailer\PHPMailer\Exception;
@@ -7,10 +7,7 @@ require 'connect.php';
       require 'src/SMTP.php';
       require 'src/Exception.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 $product_id = null;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
@@ -42,7 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $quantity = intval($_POST['quantity'] ?? 1);
   $payment_method = trim($_POST['payment_method'] ?? 'Cash on Delivery');
 
-  if ($address && $phone && $quantity > 0 && $payment_method) {
+  $valid_payment_methods = ['Cash on Delivery', 'UPI', 'Paytm', 'Google Pay', 'Bank Transfer'];
+
+  if ($address && preg_match('/^[0-9]{10}$/', $phone) && $quantity > 0 && $quantity <= 100
+      && in_array($payment_method, $valid_payment_methods, true)) {
     $total_price = $product['price'] * $quantity;
     $delivery_date = date('Y-m-d', strtotime('+5 days'));
     $status = "Placed";
@@ -54,35 +54,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($insert->execute()) {
       // 📨 Send emai)
 
-      $mail = new PHPMailer(true);
-      try {
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'vrundamaurya07@gmail.com'; // Your email
-        $mail->Password = 'msft qfxp bfjj hgbu';    // App password
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
+      if (smtp_configured()) {
+        $mail = new PHPMailer(true);
+        try {
+          $mail->isSMTP();
+          $mail->Host = SMTP_HOST;
+          $mail->SMTPAuth = true;
+          $mail->Username = SMTP_USER;
+          $mail->Password = SMTP_PASS;
+          $mail->SMTPSecure = 'tls';
+          $mail->Port = SMTP_PORT;
 
-        $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-        $mail->addAddress('vrundamaurya07@gmail.com'); // Owner email
+          $mail->setFrom(MAIL_FROM, 'Chic Charm Beads');
+          $mail->addAddress(MAIL_TO); // Owner email
 
-        $mail->isHTML(true);
-        $mail->Subject = '🧵 New Order Received - Chic Charm Beads';
-        $mail->Body = "
-          <h2>New Order Placed</h2>
-          <p><strong>Product:</strong> {$product['name']}</p>
-          <p><strong>Quantity:</strong> $quantity</p>
-          <p><strong>Total:</strong> ₹$total_price</p>
-          <p><strong>Address:</strong> $address</p>
-          <p><strong>Phone:</strong> $phone</p>
-          <p><strong>Payment Method:</strong> $payment_method</p>
-          <p><strong>Estimated Delivery:</strong> $delivery_date</p>
-        ";
+          $mail->isHTML(true);
+          $mail->Subject = '🧵 New Order Received - Chic Charm Beads';
+          $mail->Body = "
+            <h2>New Order Placed</h2>
+            <p><strong>Product:</strong> " . htmlspecialchars($product['name']) . "</p>
+            <p><strong>Quantity:</strong> " . htmlspecialchars((string) $quantity) . "</p>
+            <p><strong>Total:</strong> ₹" . htmlspecialchars((string) $total_price) . "</p>
+            <p><strong>Address:</strong> " . htmlspecialchars($address) . "</p>
+            <p><strong>Phone:</strong> " . htmlspecialchars($phone) . "</p>
+            <p><strong>Payment Method:</strong> " . htmlspecialchars($payment_method) . "</p>
+            <p><strong>Estimated Delivery:</strong> " . htmlspecialchars($delivery_date) . "</p>
+          ";
 
-        $mail->send();
-      } catch (Exception $e) {
-        // Optional: log error
+          $mail->send();
+        } catch (Exception $e) {
+          error_log("Order mail error: " . $mail->ErrorInfo);
+        }
       }
 
       $_SESSION['order_success'] = [
@@ -198,9 +200,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <h2>Place Order for <?= htmlspecialchars($product['name']) ?></h2>
 
   <?php if ($success_message): ?>
-    <p class="msg success"><?= $success_message ?></p>
+    <p class="msg success"><?= htmlspecialchars($success_message) ?></p>
   <?php elseif ($error_message): ?>
-    <p class="msg"><?= $error_message ?></p>
+    <p class="msg"><?= htmlspecialchars($error_message) ?></p>
   <?php endif; ?>
 
   <form method="POST">

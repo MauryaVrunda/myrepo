@@ -1,11 +1,9 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
+require 'uploads.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 $user_id = $_SESSION['user_id'];
 $success = '';
@@ -15,21 +13,17 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
   $file = $_FILES['profile_image'];
 
-  if ($file['error'] === 0) {
-    $fileName = basename($file['name']);
-    $fileTmp = $file['tmp_name'];
-    $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+  $uploadError = null;
+  $newName = validated_image_name($file, $uploadError);
 
-    if (in_array($fileExt, $allowed)) {
-      $newName = "user_" . $user_id . "_" . time() . "." . $fileExt;
+  if ($newName !== null) {
       $destination = "profile_images/" . $newName;
 
       if (!is_dir("profile_images")) {
-        mkdir("profile_images", 0777, true);
+        mkdir("profile_images", 0755, true);
       }
 
-      if (move_uploaded_file($fileTmp, $destination)) {
+      if (move_uploaded_file($file['tmp_name'], $destination)) {
         $update = $conn->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
         $update->bind_param("si", $newName, $user_id);
         if ($update->execute()) {
@@ -40,11 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
       } else {
         $error = "Failed to upload image.";
       }
-    } else {
-      $error = "Invalid file type. Please upload JPG, JPEG, PNG or WEBP.";
-    }
   } else {
-    $error = "File error. Please try again.";
+    $error = $uploadError ?? "File error. Please try again.";
   }
 }
 ?>

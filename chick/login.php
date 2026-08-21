@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
 if (isset($_SESSION['user_id'])) {
@@ -21,22 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($user = $result->fetch_assoc()) {
  if (password_verify($password, $user['password'])) {
+    session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['name'];
     $_SESSION['user_email'] = $user['email'];  
 
       // ✅ Admin check based on email
-      if ($email === 'admin@gmail.com') {
+      if ($email === ADMIN_EMAIL) {
         header("Location: admin_dashboard.php");
       } else {
         header("Location: user_dashboard.php");
       }
       exit();
     } else {
-      $error = "❌ Invalid password!";
+      $error = "❌ Invalid email or password!";
     }
   } else {
-    $error = "❌ No user found with that email!";
+    $error = "❌ Invalid email or password!";
   }
 }
 ?>

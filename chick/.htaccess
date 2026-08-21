@@ -1,0 +1,4 @@
+# Never serve local configuration or environment files.
+<FilesMatch "^(\.env.*|config\.php|auth\.php|connect\.php|uploads\.php)$">
+  Require all denied
+</FilesMatch>

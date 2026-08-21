@@ -1,12 +1,9 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
+require 'uploads.php';
 
-// Allow only admin
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 $message = "";
 
@@ -16,8 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price']);
     $image = $_FILES['image'];
 
-    if ($name && $price && $image['size'] > 0) {
-        $imageName = time() . "_" . basename($image['name']);
+    $uploadError = null;
+    $imageName = $name && $price > 0 ? validated_image_name($image, $uploadError) : null;
+
+    if ($imageName !== null) {
         $targetPath = "images/" . $imageName;
 
         if (move_uploaded_file($image['tmp_name'], $targetPath)) {
@@ -32,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "❌ Failed to upload image.";
         }
     } else {
-        $message = "❌ All fields are required.";
+        $message = "❌ " . ($uploadError ?? "All fields are required.");
     }
 }
 ?>

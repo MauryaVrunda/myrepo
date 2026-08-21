@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 
 if (!isset($_SESSION['order_success'])) {
   header("Location: index.php");

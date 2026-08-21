@@ -1,15 +1,12 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
 // Protect user dashboard
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_login();
 
 // Prevent admin from accessing user dashboard
-if ($_SESSION['user_email'] === 'admin@gmail.com') {
+if (is_admin()) {
     header("Location: admin_dashboard.php");
     exit();
 }

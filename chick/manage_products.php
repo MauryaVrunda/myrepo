@@ -1,12 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-// Admin authentication
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 // Fetch all products
 $result = $conn->query("SELECT * FROM products ORDER BY id DESC");

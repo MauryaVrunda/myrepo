@@ -1,12 +1,9 @@
 
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_login();
 
 $user_id = $_SESSION['user_id'];
 
@@ -85,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
   <h2>Checkout</h2>
-  <?php if ($error): ?><p style="color:red"><?= $error ?></p><?php endif; ?>
+  <?php if ($error): ?><p style="color:red"><?= htmlspecialchars($error) ?></p><?php endif; ?>
   <form method="POST">
     <label>Full Name:</label><br>
     <input type="text" name="full_name" required><br><br>
@@ -115,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
   <h2>Checkout</h2>
-  <?php if ($error): ?><p style="color:red"><?= $error ?></p><?php endif; ?>
+  <?php if ($error): ?><p style="color:red"><?= htmlspecialchars($error) ?></p><?php endif; ?>
   <form method="POST">
     <label>Full Name:</label><br>
     <input type="text" name="full_name" required><br><br>

@@ -1,12 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-// Optional: Add authentication to ensure only admin accesses this page
-// if ($_SESSION['user_role'] !== 'admin') {
-//   header("Location: login.php");
-//   exit();
-//}
+require_admin();
 
 $sql = "SELECT orders.*, users.name AS user_name, products.name AS product_name, products.image 
         FROM orders
@@ -83,13 +79,13 @@ $result = $conn->query($sql);
     <div class="order-grid">
       <?php while($order = $result->fetch_assoc()): ?>
         <div class="order-card">
-          <img src="images/<?= $order['image'] ?>" alt="<?= $order['product_name'] ?>">
+          <img src="images/<?= htmlspecialchars($order['image']) ?>" alt="<?= htmlspecialchars($order['product_name']) ?>">
           <h4><?= htmlspecialchars($order['product_name']) ?></h4>
           <p><strong>Customer:</strong> <?= htmlspecialchars($order['user_name']) ?></p>
-          <p><strong>Quantity:</strong> <?= $order['quantity'] ?></p>
-          <p><strong>Phone:</strong> <?= $order['phone'] ?></p>
+          <p><strong>Quantity:</strong> <?= htmlspecialchars($order['quantity']) ?></p>
+          <p><strong>Phone:</strong> <?= htmlspecialchars($order['phone']) ?></p>
           <p><strong>Address:</strong> <?= htmlspecialchars($order['address']) ?></p>
-          <p class="total">Total: ₹<?= $order['total_price'] ?></p>
+          <p class="total">Total: ₹<?= htmlspecialchars($order['total_price']) ?></p>
           <small><?= date('d M Y, h:i A', strtotime($order['order_date'])) ?></small>
         </div>
       <?php endwhile; ?>

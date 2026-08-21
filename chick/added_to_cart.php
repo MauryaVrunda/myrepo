@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 $product_name = $_GET['product'] ?? 'Product';
 ?>
 <!DOCTYPE html>
