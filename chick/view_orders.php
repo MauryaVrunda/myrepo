@@ -11,6 +11,9 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.
 $search = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
+$error = $_SESSION['order_error'] ?? '';
+unset($_SESSION['order_error']);
+
 // Build dynamic query
 $query = "SELECT orders.*,   users.name AS user_name, 
          users.email AS user_email, 
@@ -18,7 +21,7 @@ $query = "SELECT orders.*,   users.name AS user_name,
           FROM orders
           JOIN users ON orders.user_id = users.id
           JOIN products ON orders.product_id = products.id
-          ";
+          WHERE 1 = 1";
 
 if ($search) {
     $searchTerm = "%$search%";
@@ -134,6 +137,10 @@ $result = $stmt->get_result();
   
   <button type="submit">🔍 Search</button>
 </form>
+    <?php if ($error): ?>
+      <p style="color:red; font-weight:bold;"><?= htmlspecialchars($error) ?></p>
+    <?php endif; ?>
+
     <?php if ($result->num_rows > 0): ?>
         
       <table>

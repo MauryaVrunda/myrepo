@@ -9,12 +9,20 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+$error = $_SESSION['cart_error'] ?? '';
+unset($_SESSION['cart_error']);
+
 // Remove product
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove'], $_POST['cart_id'])) {
   $cart_id = intval($_POST['cart_id']);
-  $stmt = $conn->prepare("DELETE FROM cart WHERE id = ? AND user_id = ?");
-  $stmt->bind_param("ii", $cart_id, $user_id);
-  $stmt->execute();
+  try {
+    $stmt = $conn->prepare("DELETE FROM cart WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ii", $cart_id, $user_id);
+    $stmt->execute();
+  } catch (mysqli_sql_exception $e) {
+    error_log("Remove from cart failed for user $user_id, cart item $cart_id: " . $e->getMessage());
+    $error = "Could not remove the item from your cart. Please try again.";
+  }
 }
 
 // Fetch cart items
@@ -211,7 +219,11 @@ while ($row = $result->fetch_assoc()) {
     <li><a href="user_dashboard.php">Account</a></li>
   </ul>
 </div>
-<h2>🛍️ Your Shopping Cart</h2><div class="cart-container">
+<h2>🛍️ Your Shopping Cart</h2>
+<?php if ($error): ?>
+  <p style="color:red; font-weight:bold;"><?= htmlspecialchars($error) ?></p>
+<?php endif; ?>
+<div class="cart-container">
   <div class="cart-items">
     
     <?php if (count($cart_items) > 0): ?>

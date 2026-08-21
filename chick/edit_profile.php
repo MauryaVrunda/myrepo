@@ -25,25 +25,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
       $newName = "user_" . $user_id . "_" . time() . "." . $fileExt;
       $destination = "profile_images/" . $newName;
 
-      if (!is_dir("profile_images")) {
-        mkdir("profile_images", 0777, true);
-      }
-
-      if (move_uploaded_file($fileTmp, $destination)) {
-        $update = $conn->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
-        $update->bind_param("si", $newName, $user_id);
-        if ($update->execute()) {
+      if (!is_dir("profile_images") && !mkdir("profile_images", 0777, true)) {
+        error_log("Could not create profile_images directory");
+        $error = "Failed to upload image.";
+      } elseif (move_uploaded_file($fileTmp, $destination)) {
+        try {
+          $update = $conn->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
+          $update->bind_param("si", $newName, $user_id);
+          $update->execute();
           $success = "Profile photo updated successfully!";
-        } else {
+        } catch (mysqli_sql_exception $e) {
+          error_log("Profile photo update failed for user $user_id: " . $e->getMessage());
           $error = "Database update failed.";
         }
       } else {
+        error_log("Could not move uploaded profile photo to $destination");
         $error = "Failed to upload image.";
       }
     } else {
       $error = "Invalid file type. Please upload JPG, JPEG, PNG or WEBP.";
     }
   } else {
+    error_log("Profile photo upload failed for user $user_id with error code {$file['error']}");
     $error = "File error. Please try again.";
   }
 }

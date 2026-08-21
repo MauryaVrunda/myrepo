@@ -39,37 +39,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (count($cart_items) > 0) {
-            // ✅ Insert into orders table
-            $stmt = $conn->prepare("INSERT INTO orders (user_id, customer_name, phone, address, payment_method, order_date, delivery_date, status)
-                                    VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)");
-            $stmt->bind_param("issssss", $user_id, $name, $phone, $address, $payment_method, $delivery_date, $status);
-            $stmt->execute();
-            $order_id = $stmt->insert_id;
+            // The order, its items and the cart reset must all land together,
+            // otherwise a half-written order would be shown as successful.
+            $conn->begin_transaction();
 
-            // ✅ Insert each cart item into order_items
-            $item_stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+            try {
+                // ✅ Insert into orders table
+                $stmt = $conn->prepare("INSERT INTO orders (user_id, customer_name, phone, address, payment_method, order_date, delivery_date, status)
+                                        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)");
+                $stmt->bind_param("issssss", $user_id, $name, $phone, $address, $payment_method, $delivery_date, $status);
+                $stmt->execute();
+                $order_id = $stmt->insert_id;
 
-            foreach ($cart_items as $item) {
-                $pid = $item['product_id'];
-                $qty = $item['quantity'];
-                $price = $item['price'];
-                $item_stmt->bind_param("iiid", $order_id, $pid, $qty, $price);
-                $item_stmt->execute();
+                // ✅ Insert each cart item into order_items
+                $item_stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+
+                foreach ($cart_items as $item) {
+                    $pid = $item['product_id'];
+                    $qty = $item['quantity'];
+                    $price = $item['price'];
+                    $item_stmt->bind_param("iiid", $order_id, $pid, $qty, $price);
+                    $item_stmt->execute();
+                }
+
+                // ✅ Clear cart
+                $del = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+                $del->bind_param("i", $user_id);
+                $del->execute();
+
+                $conn->commit();
+            } catch (mysqli_sql_exception $e) {
+                $conn->rollback();
+                error_log("Checkout failed for user $user_id: " . $e->getMessage());
+                $error = "❌ We could not place your order. Please try again.";
             }
 
-            // ✅ Clear cart
-            $del = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
-            $del->bind_param("i", $user_id);
-            $del->execute();
-
-            // ✅ Redirect
-            $_SESSION['order_success'] = [
-                'total_price' => $total_price,
-                'delivery_date' => $delivery_date,
-                'payment_method' => $payment_method
-            ];
-            header("Location: thankyou.php");
-            exit();
+            if (!$error) {
+                // ✅ Redirect
+                $_SESSION['order_success'] = [
+                    'total_price' => $total_price,
+                    'delivery_date' => $delivery_date,
+                    'payment_method' => $payment_method
+                ];
+                header("Location: thankyou.php");
+                exit();
+            }
         } else {
             $error = "🛒 Your cart is empty.";
         }

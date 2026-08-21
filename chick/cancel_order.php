@@ -58,21 +58,37 @@ if (!isset($_SESSION['user_id']) || !isset($_POST['order_id'])) {
 $order_id = intval($_POST['order_id']);
 $user_id = $_SESSION['user_id'];
 
-// Validate the order
-$check = $conn->prepare("SELECT o.*, p.name AS product_name FROM orders o
-                         JOIN products p ON o.product_id = p.id
-                         WHERE o.id = ? AND o.user_id = ? AND o.status = 'Placed'");
-$check->bind_param("ii", $order_id, $user_id);
-$check->execute();
-$result = $check->get_result();
+try {
+  // Validate the order
+  $check = $conn->prepare("SELECT o.*, p.name AS product_name FROM orders o
+                           JOIN products p ON o.product_id = p.id
+                           WHERE o.id = ? AND o.user_id = ? AND o.status = 'Placed'");
+  $check->bind_param("ii", $order_id, $user_id);
+  $check->execute();
+  $result = $check->get_result();
+} catch (mysqli_sql_exception $e) {
+  error_log("Order lookup failed for order $order_id, user $user_id: " . $e->getMessage());
+  $_SESSION['cancel_result'] = ['status' => 'fail', 'msg' => 'Could not cancel your order. Please try again.'];
+  exit();
+}
 
 if ($result->num_rows === 1) {
   $order = $result->fetch_assoc();
 
   // Update status to 'Cancelled'
-  $update = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE id = ?");
-  $update->bind_param("i", $order_id);
-  $update->execute();
+  try {
+    $update = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE id = ?");
+    $update->bind_param("i", $order_id);
+    $update->execute();
+
+    if ($update->affected_rows === 0) {
+      throw new RuntimeException("Order $order_id was not cancelled");
+    }
+  } catch (mysqli_sql_exception | RuntimeException $e) {
+    error_log("Order cancellation failed for order $order_id: " . $e->getMessage());
+    $_SESSION['cancel_result'] = ['status' => 'fail', 'msg' => 'Could not cancel your order. Please try again.'];
+    exit();
+  }
 
   // Email notification to admin
   try {
@@ -100,7 +116,8 @@ if ($result->num_rows === 1) {
     ";
     $mail->send();
   } catch (Exception $e) {
-    // Log email error if needed
+    // The order is already cancelled, so only the notification is lost.
+    error_log("Cancellation email failed for order $order_id: " . $mail->ErrorInfo);
   }
 
   $_SESSION['cancel_result'] = ['status' => 'success', 'msg' => 'Order cancelled successfully!'];

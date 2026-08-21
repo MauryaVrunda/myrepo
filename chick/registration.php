@@ -7,21 +7,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email']);
   $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-  $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-  $check->bind_param("s", $email);
-  $check->execute();
-  $check_result = $check->get_result();
+  try {
+    $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    $check_result = $check->get_result();
 
-  if ($check_result->num_rows > 0) {
-    $message = "⚠️ Email already registered!";
-  } else {
-    $stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $name, $email, $password);
-    if ($stmt->execute()) {
-      $message = "✅ Registered successfully! <a href='login.php'>Login now</a>";
+    if ($check_result->num_rows > 0) {
+      $message = "⚠️ Email already registered!";
     } else {
-      $message = "❌ Registration failed!";
+      $stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+      $stmt->bind_param("sss", $name, $email, $password);
+      $stmt->execute();
+      $message = "✅ Registered successfully! <a href='login.php'>Login now</a>";
     }
+  } catch (mysqli_sql_exception $e) {
+    error_log("Registration failed for $email: " . $e->getMessage());
+    $message = "❌ Registration failed! Please try again.";
   }
 }
 ?>
