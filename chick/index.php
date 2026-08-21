@@ -1,4 +1,5 @@
 <?php
+require 'auth.php';
 require 'connect.php';
 
 
@@ -507,7 +508,7 @@ body {
     <li><a href="shop.php"><i class="fas fa-store"></i></a></li>
     <li><a href="wishlist.php"><i class="fas fa-heart"></i> </a></li>
     <li><a href="cart.php"><i class="fas fa-shopping-cart"></i></a></li>
-    <?php if (isset($_SESSION['user_email']) && $_SESSION['user_email'] === 'admin@gmail.com'): ?>
+    <?php if (is_admin()): ?>
     <li><a href="admin_dashboard.php"><i class="fas fa-user"></i></a></li>
 <?php elseif (isset($_SESSION['user_id'])): ?>
     <li><a href="user_dashboard.php"><i class="fas fa-user"></i></a></li>

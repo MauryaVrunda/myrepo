@@ -1,11 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $order_id = intval($_POST['order_id']);

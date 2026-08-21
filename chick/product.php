@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
 if (!isset($_GET['id'])) {

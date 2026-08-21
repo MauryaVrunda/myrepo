@@ -1,12 +1,12 @@
 <?php
-$host = "localhost";       // Or your hosting DB server
-$user = "root";            // Your DB username
-$pass = "";                // Your DB password (on XAMPP it's usually empty)
-$dbname = "chic-charm beads"; // Your database name
+require_once __DIR__ . '/config.php';
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
 if ($conn->connect_error) {
-    die("❌ Connection failed: " . $conn->connect_error);
+    error_log("Database connection failed: " . $conn->connect_error);
+    http_response_code(500);
+    die("Service temporarily unavailable.");
 }
-?>
+
+$conn->set_charset('utf8mb4');

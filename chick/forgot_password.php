@@ -10,45 +10,47 @@ require 'phpmailer/src/Exception.php';
 require 'phpmailer/src/PHPMailer.php';
 require 'phpmailer/src/SMTP.php';
 
-// Connect to database (optional)
-$conn = mysqli_connect('localhost', 'root', '', 'portfgenie', 3307);
+require_once __DIR__ . '/connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name    = trim($_POST['name']);
-    $email   = trim($_POST['email']);
-    $message = trim($_POST['message']);
+    $name    = trim($_POST['name'] ?? '');
+    $email   = trim($_POST['email'] ?? '');
+    $message = trim($_POST['message'] ?? '');
 
-    if (!empty($name) && !empty($email) && !empty($message)) {
+    if ($name === '' || $message === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+        echo "<p style='color:red;'>Please fill in all fields with a valid email address.</p>";
+    } elseif (!smtp_configured()) {
+        echo "<p style='color:red;'>Mail is not configured.</p>";
+    } else {
         $mail = new PHPMailer(true);
 
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = SMTP_HOST;
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'vrundamaurya07@gmail.com';
-            $mail->Password   = 'msft qfxp bfjj hgbu'; // App password
+            $mail->Username   = SMTP_USER;
+            $mail->Password   = SMTP_PASS;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Port       = SMTP_PORT;
 
-            $mail->setFrom('vrundamaurya07@gmail.com', 'Career Guide');
-            $mail->addAddress('support@careerguide.com');
+            $mail->setFrom(MAIL_FROM, 'Chic Charm Beads');
+            $mail->addAddress(MAIL_TO);
 
             $mail->isHTML(true);
             $mail->Subject = 'New Contact Form Submission';
             $mail->Body    = "
                 <h3>New Message from Contact Form</h3>
-                <p><strong>Name:</strong> {$name}</p>
-                <p><strong>Email:</strong> {$email}</p>
-                <p><strong>Message:</strong><br>{$message}</p>
+                <p><strong>Name:</strong> " . htmlspecialchars($name) . "</p>
+                <p><strong>Email:</strong> " . htmlspecialchars($email) . "</p>
+                <p><strong>Message:</strong><br>" . htmlspecialchars($message) . "</p>
             ";
 
             $mail->send();
             echo "<p style='color:green;'>Message sent successfully!</p>";
         } catch (Exception $e) {
-            echo "<p style='color:red;'>Mailer Error: {$mail->ErrorInfo}</p>";
+            error_log("Forgot password mail error: " . $mail->ErrorInfo);
+            echo "<p style='color:red;'>Could not send the message. Please try again later.</p>";
         }
-    } else {
-        echo "<p style='color:red;'>Please fill in all fields.</p>";
     }
 }
 ?>

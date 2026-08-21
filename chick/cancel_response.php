@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 $result = $_SESSION['cancel_result'] ?? ['status' => 'fail', 'msg' => 'Something went wrong.'];
 unset($_SESSION['cancel_result']);
 ?>
@@ -54,7 +54,7 @@ unset($_SESSION['cancel_result']);
     <div class="status">
       <?= $result['status'] === 'success' ? '🎉 Cancelled!' : '⚠️ Oops!' ?>
     </div>
-    <div class="msg"><?= $result['msg'] ?></div>
+    <div class="msg"><?= htmlspecialchars($result['msg']) ?></div>
     <a class="back-btn" href="user_dashboard.php">← Go Back to My Orders</a>
   </div>
 </body>

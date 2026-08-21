@@ -1,11 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 $user_id = $_SESSION['user_id'];
 $product_id = intval($_GET['id'] ?? 0);

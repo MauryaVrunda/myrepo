@@ -1,12 +1,9 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
 // Redirect if user is not logged in
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 $user_id = $_SESSION['user_id'];
 

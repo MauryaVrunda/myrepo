@@ -1,11 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $cart_id = intval($_POST['cart_id']);

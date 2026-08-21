@@ -1,12 +1,9 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
+require 'uploads.php';
 
-// Only allow admin
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 // Ensure product ID is present
 if (!isset($_GET['id'])) {
@@ -35,25 +32,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newImage = $_FILES['image'];
 
     $imageName = $product['image']; // default
+    $uploadError = null;
 
     // If new image is uploaded
-    if ($newImage['size'] > 0) {
-        $imageName = time() . "_" . basename($newImage['name']);
-        $target = "images/" . $imageName;
-        move_uploaded_file($newImage['tmp_name'], $target);
+    if (isset($newImage['error']) && $newImage['error'] !== UPLOAD_ERR_NO_FILE) {
+        $validatedName = validated_image_name($newImage, $uploadError);
+        if ($validatedName === null) {
+            $message = "❌ " . $uploadError;
+        } elseif (move_uploaded_file($newImage['tmp_name'], "images/" . $validatedName)) {
+            $imageName = $validatedName;
+        } else {
+            $message = "❌ Failed to upload image.";
+        }
     }
 
-    // Update product
-    $update = $conn->prepare("UPDATE products SET name = ?, price = ?, image = ? WHERE id = ?");
-    $update->bind_param("sdsi", $name, $price, $imageName, $product_id);
+    // Update product only when the upload (if any) succeeded
+    if ($message === "") {
+        $update = $conn->prepare("UPDATE products SET name = ?, price = ?, image = ? WHERE id = ?");
+        $update->bind_param("sdsi", $name, $price, $imageName, $product_id);
 
-    if ($update->execute()) {
-        $message = "✅ Product updated successfully!";
-        // Refresh product data
-        $stmt->execute();
-        $product = $stmt->get_result()->fetch_assoc();
-    } else {
-        $message = "❌ Error updating product.";
+        if ($update->execute()) {
+            $message = "✅ Product updated successfully!";
+            // Refresh product data
+            $stmt->execute();
+            $product = $stmt->get_result()->fetch_assoc();
+        } else {
+            $message = "❌ Error updating product.";
+        }
     }
 }
 ?>

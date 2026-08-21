@@ -1,7 +1,8 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
+require_admin();
 ?>
 
 <!DOCTYPE html>

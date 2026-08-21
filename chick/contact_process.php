@@ -9,45 +9,58 @@ require 'src/Exception.php';
 require 'src/PHPMailer.php';
 require 'src/SMTP.php';
 
-// Sanitize form inputs
-$name = mysqli_real_escape_string($conn, $_POST['name']);
-$email = mysqli_real_escape_string($conn, $_POST['email']);
-$message = mysqli_real_escape_string($conn, $_POST['message']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: contact.html");
+    exit();
+}
 
-// Save message to database
-$sql = "INSERT INTO contact_messages (name, email, message) 
-        VALUES ('$name', '$email', '$message')";
+$name = trim($_POST['name'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$message = trim($_POST['message'] ?? '');
+
+$valid_input = $name !== '' && $message !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false
+    && strlen($name) <= 100 && strlen($email) <= 254 && strlen($message) <= 5000;
+
+$saved = false;
+if ($valid_input) {
+    $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $email, $message);
+    $saved = $stmt->execute();
+    if (!$saved) {
+        error_log("Failed to save contact message: " . $conn->error);
+    }
+}
 
 // Default email status
 $email_sent = false;
 
 // Email sending with PHPMailer
-$mail = new PHPMailer(true);
-try {
-    // Server settings
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
+if ($saved && smtp_configured()) {
+    $mail = new PHPMailer(true);
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = SMTP_PORT;
 
-    // 🟣 Replace with your Gmail and App Password here
-    $mail->Username = 'vrundamaurya07@gmail.com';         // Your Gmail
-    $mail->Password =  'msft qfxp bfjj hgbu';      // App password from Google
+        // Email content
+        $mail->setFrom(MAIL_FROM, 'Chic Charm Beads');
+        $mail->addAddress(MAIL_TO);
 
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
+        $mail->isHTML(false);
+        $mail->Subject = "New Contact Message";
+        $mail->Body    = "You received a message:\n\nName: $name\nEmail: $email\nMessage:\n$message";
 
-    // Email content
-    $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-    $mail->addAddress('vrundamaurya07@gmail.com'); // Send to self
-
-    $mail->isHTML(false);
-    $mail->Subject = "New Contact Message from $name";
-    $mail->Body    = "You received a message:\n\nName: $name\nEmail: $email\nMessage:\n$message";
-
-    $mail->send();
-    $email_sent = true;
-} catch (Exception $e) {
-    $email_sent = false;
+        $mail->send();
+        $email_sent = true;
+    } catch (Exception $e) {
+        error_log("Contact mail error: " . $mail->ErrorInfo);
+        $email_sent = false;
+    }
 }
 ?>
 
@@ -101,16 +114,18 @@ try {
 <body>
   <div class="status-container">
     <?php
-    if ($conn->query($sql) === TRUE && $email_sent) {
-        echo "<h2>🎉 Thank you, $name!</h2>";
+    if (!$valid_input) {
+        echo "<h2>❌ Error</h2>";
+        echo "<p>Please provide your name, a valid email address and a message.</p>";
+    } elseif ($saved && $email_sent) {
+        echo "<h2>🎉 Thank you, " . htmlspecialchars($name) . "!</h2>";
         echo "<p>Your message has been saved and emailed to us. We'll contact you soon 💌</p>";
-    } elseif ($conn->query($sql) === TRUE && !$email_sent) {
+    } elseif ($saved) {
         echo "<h2>✔️ Message Saved!</h2>";
         echo "<p>We saved your message, but email sending failed.</p>";
     } else {
         echo "<h2>❌ Error</h2>";
         echo "<p>Something went wrong while saving your message.</p>";
-        echo "<p>" . $conn->error . "</p>";
     }
     $conn->close();
     ?>

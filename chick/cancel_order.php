@@ -1,5 +1,5 @@
 <?php
-session_start();
+require 'auth.php';
 require 'connect.php';
 
 // Include PHPMailer at the top
@@ -50,7 +50,7 @@ echo "<!DOCTYPE html>
 </body>
 </html>";
 
-if (!isset($_SESSION['user_id']) || !isset($_POST['order_id'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id']) || !isset($_POST['order_id'])) {
   $_SESSION['cancel_result'] = ['status' => 'fail', 'msg' => 'Invalid request.'];
   exit();
 }
@@ -75,32 +75,34 @@ if ($result->num_rows === 1) {
   $update->execute();
 
   // Email notification to admin
-  try {
-    $mail = new PHPMailer(true);
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->SMTPAuth = true;
-    $mail->Username = 'vrundamaurya07@gmail.com'; // your email
-    $mail->Password = 'msft qfxp bfjj hgbu';    // your app password
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
+  if (smtp_configured()) {
+    try {
+      $mail = new PHPMailer(true);
+      $mail->isSMTP();
+      $mail->Host = SMTP_HOST;
+      $mail->SMTPAuth = true;
+      $mail->Username = SMTP_USER;
+      $mail->Password = SMTP_PASS;
+      $mail->SMTPSecure = 'tls';
+      $mail->Port = SMTP_PORT;
 
-    $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-    $mail->addAddress('vrundamaurya07@gmail.com'); // admin email
+      $mail->setFrom(MAIL_FROM, 'Chic Charm Beads');
+      $mail->addAddress(MAIL_TO); // admin email
 
-    $mail->isHTML(true);
-    $mail->Subject = '⚠️ Order Cancelled - Chic Charm Beads';
-    $mail->Body = "
-      <h2>Order Cancelled</h2>
-      <p><strong>Order ID:</strong> {$order_id}</p>
-      <p><strong>Product:</strong> {$order['product_name']}</p>
-      <p><strong>Quantity:</strong> {$order['quantity']}</p>
-      <p><strong>Total:</strong> ₹{$order['total_price']}</p>
-      <p><strong>User ID:</strong> {$order['user_id']}</p>
-    ";
-    $mail->send();
-  } catch (Exception $e) {
-    // Log email error if needed
+      $mail->isHTML(true);
+      $mail->Subject = '⚠️ Order Cancelled - Chic Charm Beads';
+      $mail->Body = "
+        <h2>Order Cancelled</h2>
+        <p><strong>Order ID:</strong> " . htmlspecialchars((string) $order_id) . "</p>
+        <p><strong>Product:</strong> " . htmlspecialchars($order['product_name']) . "</p>
+        <p><strong>Quantity:</strong> " . htmlspecialchars((string) $order['quantity']) . "</p>
+        <p><strong>Total:</strong> ₹" . htmlspecialchars((string) $order['total_price']) . "</p>
+        <p><strong>User ID:</strong> " . htmlspecialchars((string) $order['user_id']) . "</p>
+      ";
+      $mail->send();
+    } catch (Exception $e) {
+      error_log("Cancel mail error: " . $mail->ErrorInfo);
+    }
   }
 
   $_SESSION['cancel_result'] = ['status' => 'success', 'msg' => 'Order cancelled successfully!'];
