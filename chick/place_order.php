@@ -1,16 +1,8 @@
 <?php
-session_start();
-require 'connect.php';
-  use PHPMailer\PHPMailer\PHPMailer;
-      use PHPMailer\PHPMailer\Exception;
-      require 'src/PHPMailer.php';
-      require 'src/SMTP.php';
-      require 'src/Exception.php';
+require 'includes/bootstrap.php';
+require 'includes/mailer.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
+require_login();
 
 $product_id = null;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
@@ -22,10 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
   exit();
 }
 
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->bind_param("i", $product_id);
-$stmt->execute();
-$product = $stmt->get_result()->fetch_assoc();
+$product = find_product($conn, $product_id);
 
 if (!$product) {
   echo "❌ Product not found.";
@@ -36,7 +25,7 @@ $success_message = "";
 $error_message = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $user_id = $_SESSION['user_id'];
+  $user_id = current_user_id();
   $address = trim($_POST['address'] ?? '');
   $phone = trim($_POST['phone'] ?? '');
   $quantity = intval($_POST['quantity'] ?? 1);
@@ -52,24 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $insert->bind_param("iiidsssss", $user_id, $product_id, $quantity, $total_price, $address, $phone, $payment_method, $delivery_date, $status);
 
     if ($insert->execute()) {
-      // 📨 Send emai)
-
-      $mail = new PHPMailer(true);
-      try {
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'vrundamaurya07@gmail.com'; // Your email
-        $mail->Password = 'msft qfxp bfjj hgbu';    // App password
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
-
-        $mail->setFrom('vrundamaurya07@gmail.com', 'Chic Charm Beads');
-        $mail->addAddress('vrundamaurya07@gmail.com'); // Owner email
-
-        $mail->isHTML(true);
-        $mail->Subject = '🧵 New Order Received - Chic Charm Beads';
-        $mail->Body = "
+      // 📨 Notify the shop owner
+      send_site_mail('🧵 New Order Received - Chic Charm Beads', "
           <h2>New Order Placed</h2>
           <p><strong>Product:</strong> {$product['name']}</p>
           <p><strong>Quantity:</strong> $quantity</p>
@@ -78,21 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <p><strong>Phone:</strong> $phone</p>
           <p><strong>Payment Method:</strong> $payment_method</p>
           <p><strong>Estimated Delivery:</strong> $delivery_date</p>
-        ";
+        ");
 
-        $mail->send();
-      } catch (Exception $e) {
-        // Optional: log error
-      }
-
-      $_SESSION['order_success'] = [
+      set_flash('order_success', [
         'product' => $product['name'],
         'delivery_date' => $delivery_date,
         'payment_method' => $payment_method
-      ];
+      ]);
 
-      header("Location: thankyou.php");
-      exit();
+      redirect_to('thankyou.php');
     } else {
       $error_message = "❌ Error placing order.";
     }

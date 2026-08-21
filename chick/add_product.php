@@ -1,12 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-// Allow only admin
-if (!isset($_SESSION['user_email']) || $_SESSION['user_email'] !== 'admin@gmail.com') {
-    header("Location: login.php");
-    exit();
-}
+require_admin();
 
 $message = "";
 
@@ -17,10 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image = $_FILES['image'];
 
     if ($name && $price && $image['size'] > 0) {
-        $imageName = time() . "_" . basename($image['name']);
-        $targetPath = "images/" . $imageName;
+        $imageName = store_product_image($image);
 
-        if (move_uploaded_file($image['tmp_name'], $targetPath)) {
+        if ($imageName !== null) {
             $stmt = $conn->prepare("INSERT INTO products (name, price, image) VALUES (?, ?, ?)");
             $stmt->bind_param("sds", $name, $price, $imageName);
             if ($stmt->execute()) {

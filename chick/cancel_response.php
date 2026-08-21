@@ -1,7 +1,7 @@
 <?php
-session_start();
-$result = $_SESSION['cancel_result'] ?? ['status' => 'fail', 'msg' => 'Something went wrong.'];
-unset($_SESSION['cancel_result']);
+require_once __DIR__ . '/includes/bootstrap.php';
+
+$result = take_flash('cancel_result') ?? ['status' => 'fail', 'msg' => 'Something went wrong.'];
 ?>
 
 <!DOCTYPE html>

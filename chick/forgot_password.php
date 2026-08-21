@@ -1,17 +1,5 @@
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-// ✅ REMOVE THIS LINE:
-// require 'vendor/autoload.php'; ← ❌ DELETE THIS
-
-// ✅ USE MANUAL INCLUDES INSTEAD:
-require 'phpmailer/src/Exception.php';
-require 'phpmailer/src/PHPMailer.php';
-require 'phpmailer/src/SMTP.php';
-
-// Connect to database (optional)
-$conn = mysqli_connect('localhost', 'root', '', 'portfgenie', 3307);
+require 'includes/mailer.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name    = trim($_POST['name']);
@@ -19,33 +7,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $message = trim($_POST['message']);
 
     if (!empty($name) && !empty($email) && !empty($message)) {
-        $mail = new PHPMailer(true);
-
-        try {
-            $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = 'vrundamaurya07@gmail.com';
-            $mail->Password   = 'msft qfxp bfjj hgbu'; // App password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
-
-            $mail->setFrom('vrundamaurya07@gmail.com', 'Career Guide');
-            $mail->addAddress('support@careerguide.com');
-
-            $mail->isHTML(true);
-            $mail->Subject = 'New Contact Form Submission';
-            $mail->Body    = "
+        $sent = send_site_mail(
+            'New Contact Form Submission',
+            "
                 <h3>New Message from Contact Form</h3>
                 <p><strong>Name:</strong> {$name}</p>
                 <p><strong>Email:</strong> {$email}</p>
                 <p><strong>Message:</strong><br>{$message}</p>
-            ";
+            ",
+            true,
+            'support@careerguide.com',
+            'Career Guide'
+        );
 
-            $mail->send();
+        if ($sent) {
             echo "<p style='color:green;'>Message sent successfully!</p>";
-        } catch (Exception $e) {
-            echo "<p style='color:red;'>Mailer Error: {$mail->ErrorInfo}</p>";
+        } else {
+            echo "<p style='color:red;'>Mailer Error: could not send your message.</p>";
         }
     } else {
         echo "<p style='color:red;'>Please fill in all fields.</p>";

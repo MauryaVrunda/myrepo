@@ -1,13 +1,7 @@
 <?php
-session_start();
-require 'connect.php';
+require 'includes/bootstrap.php';
 
-if (!isset($_SESSION['user_id'])) {
-  header("Location: login.php");
-  exit();
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = require_login();
 
 // Remove product
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove'], $_POST['cart_id'])) {
@@ -32,6 +26,7 @@ while ($row = $result->fetch_assoc()) {
 ?><!DOCTYPE html><html>
 <head>
   <title>Your Shopping Cart</title>
+  <link rel="stylesheet" href="styles/layout.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -42,39 +37,6 @@ while ($row = $result->fetch_assoc()) {
     .container {
       max-width: 1000px;
       margin: auto;
-    }
-
-    .navbar {
-      background-color: #222;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap:wrap;
-    }
-
-    .navbar .logo {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .navbar ul {
-      list-style: none;
-      display: flex;
-      gap: 20px;
-      flex-wrap:wrap;
-    }
-
-    .navbar li a {
-      color: white;
-      text-decoration: none;
-      padding: 6px 10px;
-    }
-
-    .navbar li a:hover {
-      background-color: #555;
-      border-radius: 4px;
     }
 
     h2 {
@@ -185,32 +147,9 @@ while ($row = $result->fetch_assoc()) {
  .summary button:hover {
       background-color: #9c7dfc;
     }
-.footer {
-  background: #222;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: underline;
-  margin: 0 5px;
-}
   </style>
 </head>
-<!-- Navbar -->
-<div class="navbar">
-  <div class="logo">Chic Charm Beads</div>
-  <ul>
-    <li><a href="index.php">Home</a></li>
-    <li><a href="shop.php">Shop</a></li>
-    <li><a href="wishlist.php">Wishlist</a></li>
-    <li><a href="cart.php">Cart</a></li>
-    <li><a href="user_dashboard.php">Account</a></li>
-  </ul>
-</div>
+<?php $active = 'cart.php'; include 'includes/partials/navbar.php'; ?>
 <h2>🛍️ Your Shopping Cart</h2><div class="cart-container">
   <div class="cart-items">
     
@@ -246,19 +185,7 @@ while ($row = $result->fetch_assoc()) {
   </div>
 </div>
 <!-- Footer -->
-<footer class="footer">
-  <div class="contact">
-    <p>📞 +91 9328594884 | ✉️ vrundamaurya07@gmail.com</p>
-    <a href="about.php">About Us</a><br>
-    <a href="contact.html">Contact Us</a>
-  </div>
-  <div class="social">
-    <a href="#">Instagram</a> |
-    <a href="#">Facebook</a> |
-    <a href="#">Pinterest</a> 
-  </div>
-  <p>&copy; <?= date("Y") ?> Chic Charm Beads. All rights reserved.</p>
-</footer>
+<?php include 'includes/partials/footer.php'; ?>
 <script>
   function recalculateTotals() {
     let subtotal = 0;
